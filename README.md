@@ -1,46 +1,29 @@
-# Getting Started with Create React App
+# Let's Thango [My real name is Thang so it's a pun 😗]
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application that leverages pure WebRTC protocal, Google Firestore as a signaling server, and Chromium Tab sharing protocal to allow screen sharing with audio, which enable the ability for folks to catch up and enjoy music and videos together despite the distance.
 
-## Available Scripts
+  <a href="https://letsthango.firebaseapp.com" target="_blank">Application</a>   
+  <a href="https://www.patreon.com/letsthango" target='_blank'>Support the Project</a>
 
-In the project directory, you can run:
+# Motivation
+I'm currently in a long distance relationship myself and has been for the past three years. I understand the longing desire to watch and share experiences with your partner, and how most platforms out there are not dedicate to this need, while allowing video conversation simultaneously. I am setting out to solve the problem once and for all, hence the creation of Let's Thango.
 
-### `yarn start`
+# Features
+- Sharing screen with audio using Chromium-based browsers.     
+<img width="600" src="showcase/chromium_share.png" />     
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Enjoy video at 60fps along with high quality audio.   
+- Live Video Chat between parties.     
+- Audio Only Chat betwen parties.       
+<img width="600" src="showcase/stream.png" />   
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+# Instruction
+1. The flow is relatively straighforward. One user can create the call by clicking *Create Call*, then proceed to share the Call ID by clicking on the Location pin, which will copy the ID to their clipboard. 
+2. The other users can join the call by entering the Call ID and hit *Join Call*
+3. And that's it, share your tab and enjoy the show
 
-### `yarn test`
+# Limitation
+This project is built using pure WebRTC with no forwarding server in the middle, so as users per room cross the threshold of 3 people, the stream's quality will start to decline.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `yarn build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Future goals
+Add a forwarding server using technologies such as `mediasoup` to host bigger rooms
