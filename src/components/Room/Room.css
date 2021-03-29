@@ -1,0 +1,105 @@
+#roomContainer {
+  overflow: hidden;
+  background-color: #0f1419;
+  color: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+#shareContainer {
+  margin: 0;
+  position: relative;
+  display: flex;
+}
+
+#shareVideo {
+  margin: 0; 
+  width: 100vw;
+  height: 80vh;
+  background: black;
+}
+
+#videoContainer {
+    display: flex;
+    width: 100vw; 
+    height: 20vh; 
+    max-height: 20vh;
+    flex-direction: row;
+    justify-content: center;
+}
+.videos {
+  display: flex;
+  position: relative;
+}
+.videos .action {
+  position: absolute;
+  width: 100%;
+  bottom: 9px;
+  visibility: hidden;
+}
+.videos .name {
+  position: absolute;
+  width: fit-content;
+  top: 0;
+  left: 0;
+  text-align: left;
+  vertical-align: middle;
+  line-height: 20px;
+  padding: 5px;
+  font-size: small;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: row;
+}
+.videos .name > * {
+  margin-right: 3px;
+}
+.videos:hover .action {
+  visibility: visible;
+}
+
+#videoContainer video {
+  /* width: 40vw; */
+  height: 20vh;
+  /* margin: 9px; */
+  background: #2c3e50;
+}
+
+.dominant {
+    order: 0;
+    width: 100%;
+    flex-basis: 100%;
+    height: 85vh;
+}
+.dominant span, .dominant video {
+    width: 100%;
+    height: 85vh;
+    object-fit: fill;
+}
+
+#clipboard {
+  opacity: 0;
+}
+
+/*
+  Full Screen configuration
+*/
+#roomContainer.fullScreen {
+  flex-direction: row;
+}
+.fullScreen #shareContainer {
+  height: 100vh;
+  width: 85vw;
+}
+.fullScreen #shareVideo {
+  height: 100vh;
+  width: 85vw;
+}
+.fullScreen #videoContainer {
+  height: 80vh;
+  width: 15vw;
+  flex-direction: column;
+  justify-content: flex-start;
+}
