@@ -11,6 +11,7 @@ import VolumeUpSharpIcon from '@material-ui/icons/VolumeUpSharp';
 import VideocamSharpIcon from '@material-ui/icons/VideocamSharp';
 import VideocamOffSharpIcon from '@material-ui/icons/VideocamOffSharp';
 import Tooltip from '@material-ui/core/Tooltip';
+import Fab from '@material-ui/core/Fab';
 
 import {
   Session,
@@ -25,7 +26,6 @@ import {
 import { useAlert } from '../../hooks';
 import * as ROUTES from '../../routes';
 import { logger } from '../../utils';
-import Fab from '@material-ui/core/Fab';
 
 const { useRef, useEffect, useState } = React;
 
@@ -317,7 +317,7 @@ export const Room = () => {
     await callDoc.set({ time: new Date(), callType: callType.current });
     const userDoc = callDoc.collection('users').doc(user.current);
     const usersCollection = callDoc.collection('users');
-    await userDoc.set({ name: userName.current, type: ConnectType.user, time: new Date(), status: 'active' });
+    await userDoc.set({ name: userName.current, type: ConnectType.user, time: new Date(), status: 'active', mute: mute });
     const screenDoc = callDoc.collection('users').doc('screen');
 
     // Watch for new users to come in and create new peer connection
@@ -536,7 +536,7 @@ export const Room = () => {
     }
 
     const userDoc = callDoc.collection('users').doc(user.current);
-    await userDoc.set({ name: userName.current, type: ConnectType.user, time: new Date(), status: 'active' });
+    await userDoc.set({ name: userName.current, type: ConnectType.user, time: new Date(), status: 'active', mute: mute });
     const usersCollection = callDoc.collection('users');
     const screenDoc = callDoc.collection('users').doc('screen');
 
@@ -745,7 +745,7 @@ export const Room = () => {
       await userDoc.delete();
 
       // Update screen user
-      await userDoc.set({ name: 'Screen Share', type: ConnectType.share, shareID: user.current, shareUserName: userName.current, time: new Date(), status: 'active' });
+      await userDoc.set({ name: 'Screen Share', type: ConnectType.share, shareID: user.current, shareUserName: userName.current, time: new Date(), status: 'active', mute: false });
 
       // Create offers and candidates for each user
       // const promises = (await callDoc.collection('users').get()).docs
@@ -796,9 +796,10 @@ export const Room = () => {
     }
   }
 
-  const handleMute = () => {
-    // Initial mute state is false
+  const handleMute = async () => {
     localStream.current.getAudioTracks().forEach((track) => track.enabled = mute);
+
+    await db.collection('calls').doc(callID.current).collection('users').doc(user.current).update({ mute: !mute });
     setMute(!mute);
   }
 
@@ -807,10 +808,6 @@ export const Room = () => {
     localStream.current.getTracks().forEach((track) => track.stop());
 
     Object.keys(session.current).forEach((key) => {
-      // const peer = session.current[key];
-      // peer.listeners.forEach((listener) => listener());
-      // peer.pc.close();
-      // delete session.current[key];
       deleteSessionByKey(key);
     });
     globalListeners.current.forEach((listener) => listener());
@@ -855,7 +852,7 @@ export const Room = () => {
               sessionState
             )
               .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
-              .map((peer) => <Video key={peer.peerID} peer={peer} />)
+              .map((peer) => <Video key={peer.peerID} peer={peer} callID={callID.current} />)
           }
           <div className="videos" id='localVideoContainer'>
             <span>

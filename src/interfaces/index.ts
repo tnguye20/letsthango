@@ -19,7 +19,8 @@ export interface User {
   time: Date,
   type: keyof typeof ConnectType,
   status: string,
-  shareID?: string
+  shareID?: string,
+  mute: boolean
 }
 export type Session = Record<string, Peer>;
 
