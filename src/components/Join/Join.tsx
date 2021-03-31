@@ -118,7 +118,7 @@ export const Join = () => {
             </FormGroup>
           </div>
           <br />
-          <a target='_blank' href={ROUTES.PATREON}>Support The Project!</a>
+          <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support The Project!</a>
         </div>
         <div id='logoContainer'>
           <img src={logo.current} alt='logo'/>

@@ -27,7 +27,7 @@ import * as ROUTES from '../../routes';
 import { logger } from '../../utils';
 import Fab from '@material-ui/core/Fab';
 
-const { useRef, useEffect, useState, useCallback } = React;
+const { useRef, useEffect, useState } = React;
 
 export const Room = () => {
   const clipboardRef = useRef<HTMLInputElement>(null);
@@ -46,25 +46,53 @@ export const Room = () => {
   const location = useLocation();
   const history = useHistory();
   const { openAlert, setAlertMessage, setOpenAlert, alertMessage, alertType, fireAlert} = useAlert();
-  const [sessionState, setSessionState] = useState<Peer[]>([]);
+  const [sessionState, setSessionState] = useState<Session>({});
   const [mute, setMute] = useState<boolean>(false);
   const [webcam, setWebcam] = useState<boolean>(false);
 
-  const sessionCallback = useCallback(() => {
-    logger(session.current);
-    setSessionState(
-      Object.values(
-        session.current
-      )
-        .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
-    );
+  // const sessionCallback = useCallback(() => {
+    // logger(sessionState);
+    // setSessionState(
+    //   Object.values(
+    //     session.current
+    //   )
+    //     .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
+    // );
   // eslint-disable-next-line
-  }, [session.current]);
+  // }, [sessionState]);
+
+  const addToSession = (key: string, peer: Peer) => {
+    if (session.current[key]) {
+      logger(`Duplicate key ${key}`);
+      deleteSessionByKey(key);
+      addToSession(key, peer);
+    }
+    else {
+      session.current[key] = peer;
+      setSessionState((currentSession) => {
+        return ({
+          ...currentSession,
+          [key]: peer
+        })
+      });
+    }
+    console.log(session.current);
+  }
+  const deleteSessionByKey = (key: string) => {
+    if (session.current[key]) {
+      logger(`Deleting ${key}`);
+      session.current[key].pc.close();
+      session.current[key].listeners.forEach((listener) => listener());
+      delete session.current[key];
+      setSessionState(session.current);
+    }
+    logger(`Failed to delete key ${key}`);
+  }
 
   useEffect(() => {
 
     // Interval to update videos
-    const interval = setInterval(sessionCallback, 1000);
+    // const interval = setInterval(sessionCallback, 1000);
 
     const main = async () => {
       try {
@@ -106,11 +134,12 @@ export const Room = () => {
     main();
 
     return () => {
-      clearInterval(interval);
+      // clearInterval(interval);
       // Undo as many listeners as possibe
       // eslint-disable-next-line
-      Object.values(session.current).forEach((peer) => {
-        peer.listeners.forEach((listener) => listener());
+      Object.keys(session.current).forEach((key) => {
+        // peer.listeners.forEach((listener) => listener());
+        deleteSessionByKey(key);
       });
       // eslint-disable-next-line
       globalListeners.current.forEach((listener) => listener());
@@ -156,51 +185,17 @@ export const Room = () => {
         switch (peer.pc.connectionState) {
         case "disconnected":
           {
-            logger(`Connection Disconnected - ${peer.name}`);
-            peer.listeners.forEach((listener) => listener());
-            peer.pc.close();
-            if (peer.type === ConnectType.user) {
-              fireAlert(`${peer.name} disconnected.`, ALERT_TYPE.info);
-            }
-
-            [
-              `share_to_offer_${peer.peerID}`,
-              // `share_to_offer_screen`,
-              `share_to_answer_${peer.peerID}`,
-              // `share_to_answer_screen`,
-            ].forEach((key) => {
-              if (session.current[key]) {
-                session.current[key].listeners.forEach((listener) => listener());
-                session.current[key].pc.close();
-                delete session.current[key];
-              }
-            });
-
-            delete session.current[peer.peerID];
+            deletePeerConnection(sessionKey, peer);
             break;
           }
         case "closed":
           { 
-            logger(`Connection Closed - ${peer.name}`);
-            peer.listeners.forEach((listener) => listener());
-            peer.pc.close();
-            if (peer.type === ConnectType.user) {
-              fireAlert(`${peer.name} disconnected.`, ALERT_TYPE.info);
-            }
-
-            [
-              `share_to_offer_${peer.peerID}`,
-              // `share_to_offer_screen`,
-              `share_to_answer_${peer.peerID}`,
-              // `share_to_answer_screen`,
-            ].forEach((key) => {
-              if (session.current[key]) {
-                session.current[key].listeners.forEach((listener) => listener());
-                session.current[key].pc.close();
-                delete session.current[key];
-              }
-            });
-            delete session.current[peer.peerID];
+            deletePeerConnection(sessionKey, peer);
+            break;
+          }
+        case "failed":
+          { 
+            deletePeerConnection(sessionKey, peer);
             break;
           }
         }
@@ -236,7 +231,8 @@ export const Room = () => {
           }
           else {
             listener();
-            delete session.current[sessionKey];
+            // delete session.current[sessionKey];
+            deleteSessionByKey(sessionKey);
           }
         }
       });
@@ -257,20 +253,29 @@ export const Room = () => {
             }
             else {
               listener();
-              delete session.current[sessionKey];
+              // delete session.current[sessionKey];
+              deleteSessionByKey(sessionKey);
             }
           }
         })
       });
       peer.listeners.push(listener);
 
-      session.current[sessionKey] = peer;
+      // Update session list
+      // session.current[sessionKey] = peer;
+      // setSessionState((currrentValue) => {
+      //   return {
+      //     ...currrentValue,
+      //     [sessionKey]: peer
+      //   }  
+      // })
+      addToSession(sessionKey, peer);
 
       if (peerID !== userID && type !== ConnectType.share) {
         createVideoComponent(peer, type);
       }
 
-      logger(peer);
+      return peer;
     }
     return session.current[peerID];
   }
@@ -384,9 +389,10 @@ export const Room = () => {
         // Clean up 'screen' session
         Object.keys(session.current).forEach((key) => {
           if (session.current[key].type === ConnectType.share) {
-            session.current[key].listeners.forEach((listener) => listener());
-            session.current[key].pc.close();
-            delete session.current[key];
+            // session.current[key].listeners.forEach((listener) => listener());
+            // session.current[key].pc.close();
+            // delete session.current[key];
+            deleteSessionByKey(key);
           }
         })
         if (change.type === 'added') {
@@ -406,12 +412,15 @@ export const Room = () => {
                 }
                 else {
                   listener();
-                  if (session.current['screen']) session.current['screen'].pc.close();
-                  if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
-                  if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
-                  delete session.current['screen'];
-                  delete session.current['share_to_answer_screen'];
-                  delete session.current['share_to_offer_screen'];
+                  deleteSessionByKey('screen');
+                  deleteSessionByKey('share_to_answer_screen');
+                  deleteSessionByKey('share_to_offer_screen');
+                  // if (session.current['screen']) session.current['screen'].pc.close();
+                  // if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
+                  // if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
+                  // delete session.current['screen'];
+                  // delete session.current['share_to_answer_screen'];
+                  // delete session.current['share_to_offer_screen'];
                 }
               }
             });
@@ -423,6 +432,23 @@ export const Room = () => {
       await Promise.all(promises);
     });
     globalListeners.current.push(listener);
+  }
+
+  const deletePeerConnection = (key: string, peer: Peer) => {
+    logger(`Connection Disconnected - ${peer.name}`);
+    deleteSessionByKey(key);
+    if (peer.type === ConnectType.user) {
+      fireAlert(`${peer.name} disconnected.`, ALERT_TYPE.info);
+    }
+
+    [
+      `share_to_offer_${peer.peerID}`,
+      // `share_to_offer_screen`,
+      `share_to_answer_${peer.peerID}`,
+      // `share_to_answer_screen`,
+    ].forEach((key) => {
+      deleteSessionByKey(key);
+    });
   }
 
   const createAnswerPeer = async (call: string, userID: string, offerID: string, name: string, offer: RTCSessionDescriptionInit, stream: MediaStream, type = ConnectType.user) => {
@@ -463,50 +489,17 @@ export const Room = () => {
       switch (peer.pc.connectionState) {
         case "disconnected":
           {
-            logger(`Connection Disconnected - ${peer.name}`);
-            peer.listeners.forEach((listener) => listener());
-            peer.pc.close();
-            if (peer.type === ConnectType.user) {
-              fireAlert(`${peer.name} disconnected.`, ALERT_TYPE.info);
-            }
-
-            [
-              `share_to_offer_${peer.peerID}`,
-              // `share_to_offer_screen`,
-              `share_to_answer_${peer.peerID}`,
-              // `share_to_answer_screen`,
-            ].forEach((key) => {
-              if (session.current[key]) {
-                session.current[key].listeners.forEach((listener) => listener());
-                session.current[key].pc.close();
-                delete session.current[key];
-              }
-            });
-            delete session.current[peer.peerID];
+            deletePeerConnection(sessionKey, peer);
             break;
           }
         case "closed":
           { 
-            logger(`Connection Closed - ${peer.name}`);
-            peer.listeners.forEach((listener) => listener());
-            peer.pc.close();
-            if (peer.type === ConnectType.user) {
-              fireAlert(`${peer.name} disconnected.`, ALERT_TYPE.info);
-            }
-
-            [
-              `share_to_offer_${peer.peerID}`,
-              // `share_to_offer_screen`,
-              `share_to_answer_${peer.peerID}`,
-              // `share_to_answer_screen`,
-            ].forEach((key) => {
-              if (session.current[key]) {
-                session.current[key].listeners.forEach((listener) => listener());
-                session.current[key].pc.close();
-                delete session.current[key];
-              }
-            });
-            delete session.current[peer.peerID];
+            deletePeerConnection(sessionKey, peer);
+            break;
+          }
+        case "failed":
+          { 
+            deletePeerConnection(sessionKey, peer);
             break;
           }
       }
@@ -526,12 +519,20 @@ export const Room = () => {
     };
     await answers.set({ answer });
 
-    session.current[sessionKey] = peer;
+    // Update session list
+    // session.current[sessionKey] = peer;
+    // setSessionState((currrentValue) => {
+    //   return {
+    //     ...currrentValue,
+    //     ...session,
+    //     [sessionKey]: peer
+    //   }  
+    // })
+    addToSession(sessionKey, peer);
 
     if (offerID !== userID) {
       createVideoComponent(peer, type);
     }
-    logger(peer);
     return peer;
   }
 
@@ -579,7 +580,8 @@ export const Room = () => {
                     else {
                       listener();
                       const sessionKey = answerPeer.type === ConnectType.user ? id : `share_to_answer_${id}`;
-                      delete session.current[sessionKey];
+                      deleteSessionByKey(sessionKey);
+                      // delete session.current[sessionKey];
                     }
                   }
                 });
@@ -599,7 +601,6 @@ export const Room = () => {
           .map(async (change) => {
             if (change.type === 'added') {
               const existingUserID = change.doc.id;
-              logger(existingUserID);
               if (!session.current[existingUserID]) {
                 const u = change.doc.data();
                 if (u.type === ConnectType.user) {
@@ -649,9 +650,10 @@ export const Room = () => {
         // Clean up 'screen' session
         Object.keys(session.current).forEach((key) => {
           if (session.current[key].type === ConnectType.share) {
-            session.current[key].listeners.forEach((listener) => listener());
-            session.current[key].pc.close();
-            delete session.current[key];
+            // session.current[key].listeners.forEach((listener) => listener());
+            // session.current[key].pc.close();
+            // delete session.current[key];
+            deleteSessionByKey(key);
           }
         })
         if (change.type === 'added') {
@@ -671,12 +673,15 @@ export const Room = () => {
                 }
                 else {
                   listener();
-                  if (session.current['screen']) session.current['screen'].pc.close();
-                  if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
-                  if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
-                  delete session.current['screen'];
-                  delete session.current['share_to_answer_screen'];
-                  delete session.current['share_to_offer_screen'];
+                  deleteSessionByKey('screen');
+                  deleteSessionByKey('share_to_answer_screen');
+                  deleteSessionByKey('share_to_offer_screen');
+                  // if (session.current['screen']) session.current['screen'].pc.close();
+                  // if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
+                  // if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
+                  // delete session.current['screen'];
+                  // delete session.current['share_to_answer_screen'];
+                  // delete session.current['share_to_offer_screen'];
                 }
               }
             });
@@ -724,9 +729,10 @@ export const Room = () => {
       // Clean up 'screen' session
       Object.keys(session.current).forEach((key) => {
         if (session.current[key].type === ConnectType.share) {
-          session.current[key].listeners.forEach((listener) => listener());
-          session.current[key].pc.close();
-          delete session.current[key];
+          deleteSessionByKey(key);
+          // session.current[key].listeners.forEach((listener) => listener());
+          // session.current[key].pc.close();
+          // delete session.current[key];
         }
       })
 
@@ -753,14 +759,19 @@ export const Room = () => {
       await userDoc.set({ name: 'Screen Share', type: ConnectType.share, shareID: user.current, shareUserName: userName.current, time: new Date(), status: 'active' });
 
       // Create offers and candidates for each user
-      const promises = (await callDoc.collection('users').get()).docs
-        .filter((doc) => user.current !== doc.id && doc.data().type !== ConnectType.share)
-        .map(async (doc) => {
-        const existingUserID = doc.id;
-        const data = doc.data() as User;
-        await createOfferPeer(callID.current, 'screen', existingUserID, data.name, shareStream.current, ConnectType.share);
-      });
-      await Promise.all(promises);
+      // const promises = (await callDoc.collection('users').get()).docs
+      //   .filter((doc) => user.current !== doc.id && doc.data().type !== ConnectType.share)
+      //   .map(async (doc) => {
+      //   const existingUserID = doc.id;
+      //   const data = doc.data() as User;
+      //   await createOfferPeer(callID.current, 'screen', existingUserID, data.name, shareStream.current, ConnectType.share);
+      // });
+      // await Promise.all(promises);
+      Object.values(session.current)
+        .filter((peer) => peer.type !== ConnectType.share && user.current !== peer.peerID)
+        .forEach((peer) => {
+          createOfferPeer(callID.current, 'screen', peer.peerID, peer.name, shareStream.current, ConnectType.share);
+        })
 
       // Socket to create new peers for sharing when new user join in as well
       // Clear current listener so we don't pile on them
@@ -807,10 +818,11 @@ export const Room = () => {
     localStream.current.getTracks().forEach((track) => track.stop());
 
     Object.keys(session.current).forEach((key) => {
-      const peer = session.current[key];
-      peer.listeners.forEach((listener) => listener());
-      peer.pc.close();
-      delete session.current[key];
+      // const peer = session.current[key];
+      // peer.listeners.forEach((listener) => listener());
+      // peer.pc.close();
+      // delete session.current[key];
+      deleteSessionByKey(key);
     });
     globalListeners.current.forEach((listener) => listener());
 
@@ -850,7 +862,11 @@ export const Room = () => {
         </div>
         <div ref={videoContainer} id='videoContainer'>
           {
-            sessionState.map((peer) => <Video key={peer.peerID} peer={peer} />)
+            Object.values(
+              sessionState
+            )
+              .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
+              .map((peer) => <Video key={peer.peerID} peer={peer} />)
           }
           <div className="videos" id='localVideoContainer'>
             <span>
