@@ -50,17 +50,6 @@ export const Room = () => {
   const [mute, setMute] = useState<boolean>(false);
   const [webcam, setWebcam] = useState<boolean>(false);
 
-  // const sessionCallback = useCallback(() => {
-    // logger(sessionState);
-    // setSessionState(
-    //   Object.values(
-    //     session.current
-    //   )
-    //     .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
-    // );
-  // eslint-disable-next-line
-  // }, [sessionState]);
-
   const addToSession = (key: string, peer: Peer) => {
     if (session.current[key]) {
       logger(`Duplicate key ${key}`);
@@ -76,7 +65,7 @@ export const Room = () => {
         })
       });
     }
-    console.log(session.current);
+    logger(session.current);
   }
   const deleteSessionByKey = (key: string) => {
     if (session.current[key]) {
