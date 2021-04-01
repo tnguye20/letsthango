@@ -20,8 +20,6 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color:rgba(0, 0, 0, 0.8);
-    color: palevioletred;
 }
 
 #inputContainer > * {
@@ -52,6 +50,6 @@ button:disabled {
     border-bottom: 2px solid #AF5A76 !important;
 }
 
-input {
+input, .MuiCheckbox-root  {
     color: white !important;
 }

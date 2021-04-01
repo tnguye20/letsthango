@@ -1,7 +1,8 @@
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
-import * as React from 'react';
+import { useState, useRef } from 'react';
 import { useHistory } from 'react-router';
+import { Link } from 'react-router-dom';
 import './Join.css';
 import { CustomizedAlert } from '../';
 import { db } from '../../libs';
@@ -10,12 +11,11 @@ import * as ROUTES from '../../routes';
 import { ALERT_TYPE, CALL_TYPE } from '../../interfaces';
 import { config } from '../../shared';
 import { v4 as uuidv4 } from 'uuid';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
+// import FormGroup from '@material-ui/core/FormGroup';
+// import FormControlLabel from '@material-ui/core/FormControlLabel';
+// import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 
-const { useState, useRef } = React;
 const { logoCount } = config;
 
 const getLogoPath = (): string => {
@@ -27,7 +27,7 @@ export const Join = () => {
   const logo = useRef<string>(getLogoPath());
   const [name, setName] = useState<string>('');
   const [callID, setCallID] = useState<string>('');
-  const [callType, setCallType] = useState<string>(CALL_TYPE.video);
+  // const [callType, setCallType] = useState<string>(CALL_TYPE.video);
   const { openAlert, setOpenAlert, alertMessage, alertType, fireAlert} = useAlert();
   const history = useHistory();
 
@@ -43,7 +43,7 @@ export const Join = () => {
       state: {
         name,
         callID: db.collection('calls').doc().id,
-        callType,
+        callType: CALL_TYPE.video,
         userID: uuidv4(),
         action: 'call'
       }
@@ -74,7 +74,8 @@ export const Join = () => {
         state: {
           name,
           callID,
-          callType: testCall.data()!.callType,
+          // callType: testCall.data()!.callType,
+          callType: CALL_TYPE.video,
           userID: uuidv4(),
           action: 'answer'
         }
@@ -84,21 +85,21 @@ export const Join = () => {
     main();
   }
 
-  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-    if (checked) {
-      setCallType(CALL_TYPE.audio);
-    }
-    else {
-      setCallType(CALL_TYPE.video);
-    }
-  }
+  // const handleCheck = (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+  //   if (checked) {
+  //     setCallType(CALL_TYPE.audio);
+  //   }
+  //   else {
+  //     setCallType(CALL_TYPE.video);
+  //   }
+  // }
 
   return (
     <>
       <div id='joinContainer'>
         <div id='inputContainer'>
 
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h5" gutterBottom>
             <i>It takes two to </i><span id='brand'>Thango</span>
           </Typography>
           <br />
@@ -109,16 +110,18 @@ export const Join = () => {
           <TextField id='callID' label='Call ID'  variant='standard' value={callID} onChange={(e) => setCallID(e.target.value)}/>
           <Button id='joinCallBtn' variant='contained' color='secondary' onClick={handleJoinCall} disabled={callID.length === 0}>Join Call</Button>
 
-          <div>
+          {/* <div>
             <FormGroup row>
               <FormControlLabel
                 control={<Checkbox onChange={handleCheck} name="callTypeCheck" disabled={callID.length > 0}/>}
                 label="Audio Call Only"
               />
             </FormGroup>
-          </div>
+          </div> */}
           <br />
-          <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support The Project!</a>
+          <Link to={ROUTES.HOW_TO}>How it works?</Link>
+          <a rel='noreferrer' target='_blank' href={ROUTES.BUY_ME_A_COFFEE}>Buy me a coffee!</a>
+          <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support the project on Patreon!</a>
         </div>
         <div id='logoContainer'>
           <img src={logo.current} alt='logo'/>

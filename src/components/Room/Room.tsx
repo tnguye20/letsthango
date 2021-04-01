@@ -812,7 +812,7 @@ export const Room = () => {
     });
     globalListeners.current.forEach((listener) => listener());
 
-    fireAlert('Hanging up...', ALERT_TYPE.info);
+    fireAlert('Ending call...', ALERT_TYPE.info);
     setTimeout(() => {
       history.push(ROUTES.JOIN);
     }, 2000);
