@@ -812,9 +812,10 @@ export const Room = () => {
     });
     globalListeners.current.forEach((listener) => listener());
 
+    fireAlert('Hanging up...', ALERT_TYPE.info);
     setTimeout(() => {
       history.push(ROUTES.JOIN);
-    }, 1500);
+    }, 2000);
   };
 
   const toggleWebcam = async () => {
