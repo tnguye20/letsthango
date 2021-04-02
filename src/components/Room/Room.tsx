@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { db } from '../../libs';
+import { db, analytics } from '../../libs';
 import { config } from '../../shared';
 import './Room.css';
 import { CustomizedAlert } from '../';
@@ -762,6 +762,13 @@ export const Room = () => {
           createOfferPeer(callID.current, 'screen', peer.peerID, peer.name, shareStream.current, ConnectType.share);
         })
 
+      // Analytics
+      analytics.logEvent('share_screen', {
+        name: userName.current,
+        callID: callID.current,
+        userID: user.current
+      });
+
       // Socket to create new peers for sharing when new user join in as well
       // Clear current listener so we don't pile on them
       // shareUserListener.current();
@@ -811,6 +818,13 @@ export const Room = () => {
       deleteSessionByKey(key);
     });
     globalListeners.current.forEach((listener) => listener());
+
+    // Analytics
+    analytics.logEvent('end_call', {
+      name: userName.current,
+      callID: callID.current,
+      userID: user.current
+    });
 
     fireAlert('Ending call...', ALERT_TYPE.info);
     setTimeout(() => {

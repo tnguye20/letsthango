@@ -5,7 +5,7 @@ import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 import './Join.css';
 import { CustomizedAlert } from '../';
-import { db } from '../../libs';
+import { db, analytics } from '../../libs';
 import { useAlert } from '../../hooks';
 import * as ROUTES from '../../routes';
 import { ALERT_TYPE, CALL_TYPE } from '../../interfaces';
@@ -37,14 +37,23 @@ export const Join = () => {
       return;
     }
 
+    // Analytics
+    const _callID = db.collection('calls').doc().id;
+    const _userID = uuidv4();
+    analytics.logEvent(`create_call`, {
+      name,
+      callID: _callID,
+      _userID: _userID
+    });
+
     // Construct location object to redirect
     const location = {
       pathname: ROUTES.ROOM,
       state: {
         name,
-        callID: db.collection('calls').doc().id,
+        callID: _callID,
         callType: CALL_TYPE.video,
-        userID: uuidv4(),
+        userID: _userID,
         action: 'call'
       }
     }
@@ -68,6 +77,14 @@ export const Join = () => {
         return;
       }
       
+      // Analytics
+      const _userID = uuidv4();
+      analytics.logEvent(`join_call`, {
+        name,
+        callID,
+        _userID: _userID
+      });
+
       // Construct location object to redirect
       const location = {
         pathname: ROUTES.ROOM,
@@ -76,7 +93,7 @@ export const Join = () => {
           callID,
           // callType: testCall.data()!.callType,
           callType: CALL_TYPE.video,
-          userID: uuidv4(),
+          userID: _userID,
           action: 'answer'
         }
       }

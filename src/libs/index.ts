@@ -1,5 +1,6 @@
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import 'firebase/analytics';
 
 import { config } from '../shared';
 
@@ -8,7 +9,9 @@ if (!firebase.apps.length) {
 }
 
 const db = firebase.firestore();
+const analytics = firebase.analytics();
 
 export {
-  db
+  db,
+  analytics
 };
