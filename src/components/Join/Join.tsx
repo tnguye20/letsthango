@@ -1,4 +1,5 @@
 import TextField from '@material-ui/core/TextField';
+import GitHubIcon from '@material-ui/icons/GitHub';
 import Button from '@material-ui/core/Button';
 import { useState, useRef } from 'react';
 import { useHistory } from 'react-router';
@@ -137,7 +138,9 @@ export const Join = () => {
           </div> */}
           <br />
           <Link to={ROUTES.HOW_TO}>How it works?</Link>
-          <a rel='noreferrer' target='_blank' href={ROUTES.BUY_ME_A_COFFEE}>Buy me a coffee!</a>
+          <a rel='noreferrer' target='_blank' href={ROUTES.GIT}>Check me out on Github! <GitHubIcon /></a>
+          <br />
+          <a rel='noreferrer' target='_blank' href={ROUTES.BUY_ME_TEA}>Buy me a cup of tea!</a>
           <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support the project on Patreon!</a>
         </div>
         <div id='logoContainer'>
