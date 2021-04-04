@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap');
 
 body {
-  font-family: 'Syne Mono', monospace;
+  /* font-family: 'Syne Mono', monospace; */
+  font-family: monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

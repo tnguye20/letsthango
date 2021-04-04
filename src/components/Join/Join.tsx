@@ -142,6 +142,7 @@ export const Join = () => {
           <br />
           <a rel='noreferrer' target='_blank' href={ROUTES.BUY_ME_TEA}>Buy me a cup of tea!</a>
           <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support the project on Patreon!</a>
+          <a rel='noreferrer' target='_blank' href={ROUTES.TOS}>Terms of Service</a>
         </div>
         <div id='logoContainer'>
           <img src={logo.current} alt='logo'/>

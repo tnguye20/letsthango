@@ -8,7 +8,8 @@ import './App.css';
 import {
   Join,
   Room,
-  HowTo
+  HowTo,
+  TOS
 } from './components';
 import * as ROUTES from './routes';
 
@@ -18,6 +19,7 @@ function App() {
       <Switch>
         <Route path={ROUTES.HOW_TO} children={<HowTo />}/>
         <Route path={ROUTES.ROOM} children={<Room />}/>
+        <Route path={ROUTES.TOS} children={<TOS />}/>
         <Route path={ROUTES.ROOT} children={<Join />}/>
       </Switch>
     </Router>
