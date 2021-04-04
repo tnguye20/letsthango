@@ -1,5 +1,4 @@
 import TextField from '@material-ui/core/TextField';
-import GitHubIcon from '@material-ui/icons/GitHub';
 import Button from '@material-ui/core/Button';
 import { useState, useRef } from 'react';
 import { useHistory } from 'react-router';
@@ -12,9 +11,6 @@ import * as ROUTES from '../../routes';
 import { ALERT_TYPE, CALL_TYPE } from '../../interfaces';
 import { config } from '../../shared';
 import { v4 as uuidv4 } from 'uuid';
-// import FormGroup from '@material-ui/core/FormGroup';
-// import FormControlLabel from '@material-ui/core/FormControlLabel';
-// import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 
 const { logoCount } = config;
@@ -28,7 +24,6 @@ export const Join = () => {
   const logo = useRef<string>(getLogoPath());
   const [name, setName] = useState<string>('');
   const [callID, setCallID] = useState<string>('');
-  // const [callType, setCallType] = useState<string>(CALL_TYPE.video);
   const { openAlert, setOpenAlert, alertMessage, alertType, fireAlert} = useAlert();
   const history = useHistory();
 
@@ -92,7 +87,6 @@ export const Join = () => {
         state: {
           name,
           callID,
-          // callType: testCall.data()!.callType,
           callType: CALL_TYPE.video,
           userID: _userID,
           action: 'answer'
@@ -102,15 +96,6 @@ export const Join = () => {
     }
     main();
   }
-
-  // const handleCheck = (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
-  //   if (checked) {
-  //     setCallType(CALL_TYPE.audio);
-  //   }
-  //   else {
-  //     setCallType(CALL_TYPE.video);
-  //   }
-  // }
 
   return (
     <>
@@ -128,21 +113,13 @@ export const Join = () => {
           <TextField id='callID' label='Call ID'  variant='standard' value={callID} onChange={(e) => setCallID(e.target.value)}/>
           <Button id='joinCallBtn' variant='contained' color='secondary' onClick={handleJoinCall} disabled={callID.length === 0}>Join Call</Button>
 
-          {/* <div>
-            <FormGroup row>
-              <FormControlLabel
-                control={<Checkbox onChange={handleCheck} name="callTypeCheck" disabled={callID.length > 0}/>}
-                label="Audio Call Only"
-              />
-            </FormGroup>
-          </div> */}
           <br />
           <Link to={ROUTES.HOW_TO}>How it works?</Link>
-          <a rel='noreferrer' target='_blank' href={ROUTES.GIT}>Check me out on Github! <GitHubIcon /></a>
+          <Link to={ROUTES.TOS}>Terms of Service</Link>
           <br />
           <a rel='noreferrer' target='_blank' href={ROUTES.BUY_ME_TEA}>Buy me a cup of tea!</a>
           <a rel='noreferrer' target='_blank' href={ROUTES.PATREON}>Support the project on Patreon!</a>
-          <a rel='noreferrer' target='_blank' href={ROUTES.TOS}>Terms of Service</a>
+          <a rel='noreferrer' target='_blank' href={ROUTES.GIT}>Check me out on Github!</a>
         </div>
         <div id='logoContainer'>
           <img src={logo.current} alt='logo'/>
