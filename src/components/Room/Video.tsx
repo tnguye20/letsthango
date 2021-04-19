@@ -46,10 +46,15 @@ export const Video = memo(({
     }
   };
 
+  const handlePIP = () => {
+    if (videoRef.current) {
+    }
+  }
+
   return (
     <div className={`videos ${videoID.slice(1,)}`}>
       <span>
-        <video id={videoID} ref={videoRef} autoPlay playsInline></video>
+        <video width='100%' id={videoID} ref={videoRef} autoPlay playsInline onDoubleClick={handlePIP}></video>
       </span>
       <div className='name'>
         <div>
@@ -76,12 +81,14 @@ const MuteIcon = memo(({
   const [mute, setMute] = useState<boolean>(false);
   
   useEffect(() => {
-    const unsubscribe = db.collection('calls').doc(callID).collection('users').doc(peer.peerID).onSnapshot((snapshot) => {
-      const data = snapshot.data() as User;
-      setMute(data.mute);
-    });
+    if (callID.length > 0) {
+      const unsubscribe = db.collection('calls').doc(callID).collection('users').doc(peer.peerID).onSnapshot((snapshot) => {
+        const data = snapshot.data() as User;
+        setMute(data.mute);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    }
   }, [peer.remoteStream, callID, peer.peerID])
 
   return (

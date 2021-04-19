@@ -49,6 +49,7 @@ export const Room = () => {
   const [sessionState, setSessionState] = useState<Session>({});
   const [mute, setMute] = useState<boolean>(false);
   const [webcam, setWebcam] = useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState<boolean>(false);
 
   const addToSession = (key: string, peer: Peer) => {
     if (session.current[key]) {
@@ -271,6 +272,7 @@ export const Room = () => {
 
   const createVideoComponent = (peer: Peer, type: ConnectType) => {
     if (type === ConnectType.share) {
+      setIsSharing(true);
       shareStream.current.getTracks().forEach((track) => track.stop());
       if (shareVideo.current !== null) {
         shareVideo.current.muted = false;
@@ -278,7 +280,7 @@ export const Room = () => {
         shareVideo.current.srcObject = peer.remoteStream;
       }
       else {
-        const shareVideoEl = document.querySelector('#shareVideo') as HTMLVideoElement;
+        let shareVideoEl = document.querySelector('#shareVideo') as HTMLVideoElement;
         shareVideoEl.muted = false;
         shareVideoEl.volume = process.env.NODE_ENV === 'development' ? 0 : 0.2;
         shareVideoEl.srcObject = peer.remoteStream;
@@ -690,6 +692,9 @@ export const Room = () => {
       return;
     }
 
+    // Turn on sharing screen view
+    setIsSharing(true);
+
     try {
       shareStream.current.getTracks().forEach((track) => track.stop());
 
@@ -768,7 +773,6 @@ export const Room = () => {
         callID: callID.current,
         userID: user.current
       });
-
       // Socket to create new peers for sharing when new user join in as well
       // Clear current listener so we don't pile on them
       // shareUserListener.current();
@@ -790,6 +794,7 @@ export const Room = () => {
     catch (error) {
       logger(error);
       fireAlert('Failed to share screen. Please rejoin and try again.', ALERT_TYPE.error);
+      setIsSharing(false);
     }
   }
 
@@ -847,20 +852,26 @@ export const Room = () => {
 
   return (
     <>
-      <div id="roomContainer" className='fullScreen'>
-        <div id='shareContainer' ref={shareContainer}>
-          <div className="videos">
-            <span>
-              <video id="shareVideo" ref={shareVideo} autoPlay playsInline muted></video>
-            </span>
-          </div>
-          <ActionButtons
-            shareVideoRef={shareVideo}
-            handleRoomID={handleRoomID}
-            handleShareScreen={handleShareScreen}
-            handleEndCall={handleEndCall}
-          />
-        </div>
+      <div id="roomContainer" className={isSharing ? 'sharing' : 'standalone'}>
+        {
+          isSharing
+          ? (
+            <div id='shareContainer' ref={shareContainer}>
+              <div className="videos">
+                <span>
+                  <video id="shareVideo" ref={shareVideo} autoPlay playsInline muted></video>
+                </span>
+              </div>
+              <ActionButtons
+                shareVideoRef={shareVideo}
+                handleRoomID={handleRoomID}
+                handleShareScreen={handleShareScreen}
+                handleEndCall={handleEndCall}
+              />
+            </div>
+          )
+          : ''
+        }
         <div ref={videoContainer} id='videoContainer'>
           {
             Object.values(
@@ -869,6 +880,34 @@ export const Room = () => {
               .filter((peer) => peer.peerID !== user.current && peer.type !== ConnectType.share)
               .map((peer) => <Video key={peer.peerID} peer={peer} callID={callID.current} />)
           }
+
+          {/* <Video peer={{
+            name: 'Dummy 1',
+            peerID: '12',
+            pc: new RTCPeerConnection(config.servers),
+            remoteStream: new MediaStream(),
+            listeners: [],
+            type: ConnectType.user
+          }} callID={''} /> */}
+
+          {/* <Video peer={{
+            name: 'Dummy 2',
+            peerID: '13',
+            pc: new RTCPeerConnection(config.servers),
+            remoteStream: new MediaStream(),
+            listeners: [],
+            type: ConnectType.user
+          }} callID={''} />
+
+          <Video peer={{
+            name: 'Dummy 2',
+            peerID: '13',
+            pc: new RTCPeerConnection(config.servers),
+            remoteStream: new MediaStream(),
+            listeners: [],
+            type: ConnectType.user
+          }} callID={''} /> */}
+
           <div className="videos" id='localVideoContainer'>
             <span>
               <video id="localVideo" ref={localVideo} autoPlay playsInline poster={`${process.env.PUBLIC_URL}/user_placeholer.`}></video>
@@ -904,6 +943,22 @@ export const Room = () => {
             </div>
           </div>
         </div>
+
+        {
+          !isSharing
+          ? (
+            <div id='standalone_share'>
+              <ActionButtons
+                shareVideoRef={shareVideo}
+                handleRoomID={handleRoomID}
+                handleShareScreen={handleShareScreen}
+                handleEndCall={handleEndCall}
+              />
+            </div>
+          )
+          : ''
+        }
+
       </div>
       <input id="clipboard" ref={clipboardRef} value={callID.current} onChange={() => {}}/>
       <CustomizedAlert duration={5000} openAlert={openAlert} setOpenAlert={setOpenAlert} alertMessage={alertMessage} alertType={alertType}/>

@@ -4,34 +4,30 @@
   color: white;
   position: relative;
   display: flex;
-  flex-direction: column;
-}
-
-#shareContainer {
-  margin: 0;
-  position: relative;
-  display: flex;
+  flex-direction: row;
+  height: 100vh;
 }
 
 #shareVideo {
   margin: 0; 
-  width: 100vw;
-  height: 80vh;
   background: black;
+  height: 100vh;
+  width: 85vw;
 }
 
-#videoContainer {
-    display: flex;
-    width: 100vw; 
-    height: 20vh; 
-    max-height: 20vh;
-    flex-direction: row;
-    justify-content: center;
+#videoContainer video {
+  background: #2c3e50;
+  height: 20vh;
+  width: 100%;
+  object-fit: cover;
 }
+
 .videos {
   display: flex;
   position: relative;
+  background-color: ;
 }
+
 .videos .action {
   position: absolute;
   width: 100%;
@@ -60,48 +56,56 @@
   visibility: visible;
 }
 
-#videoContainer video {
-  /* width: 40vw; */
-  height: 20vh;
-  /* margin: 9px; */
-  background: #2c3e50;
-}
-
-.dominant {
-    order: 0;
-    width: 100%;
-    flex-basis: 100%;
-    height: 85vh;
-}
-.dominant span, .dominant video {
-    width: 100%;
-    height: 85vh;
-    object-fit: fill;
-}
-
 #clipboard {
   opacity: 0;
   position: fixed;
   z-index: -1;
 }
 
-/*
-  Full Screen configuration
-*/
-#roomContainer.fullScreen {
-  flex-direction: row;
-}
-.fullScreen #shareContainer {
+#shareContainer {
+  margin: 0;
+  position: relative;
+  display: flex;
   height: 100vh;
   width: 85vw;
 }
-.fullScreen #shareVideo {
-  height: 100vh;
-  width: 85vw;
-}
-.fullScreen #videoContainer {
+
+#videoContainer {
+  display: flex;
   height: 80vh;
   width: 15vw;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+.standalone #videoContainer video {
+  width: 50vw;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+}
+
+.standalone #videoContainer {
+  height: 100vh;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.standalone .videos {
+  /* flex: 50%; */
+  width: 50vw;
+  height: 50vh;
+  position: relative;
+}
+
+#standalone_share {
+  margin: 0;
+  position: absolute;
+  bottom: 0;
+  width: 100vw;
+  height: 75px;
 }
