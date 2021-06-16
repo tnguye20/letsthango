@@ -76,7 +76,9 @@ export const Room = () => {
       delete session.current[key];
       setSessionState(session.current);
     }
-    logger(`Failed to delete key ${key}`);
+    else {
+      logger(`${key} does not exist.`);
+    }
   }
 
   useEffect(() => {
@@ -242,8 +244,11 @@ export const Room = () => {
               }
             }
             else {
-              listener();
-              // delete session.current[sessionKey];
+              if (peer.type === 'share') {
+                  deleteSessionByKey('screen');
+                  deleteSessionByKey('share_to_answer_screen');
+                  deleteSessionByKey('share_to_offer_screen');
+              }
               deleteSessionByKey(sessionKey);
             }
           }
@@ -389,34 +394,28 @@ export const Room = () => {
         if (change.type === 'added') {
           const { offer } = change.doc.data() as Offer;
           const answerPeer = await createAnswerPeer(callID.current, user.current, 'screen', 'Screen', offer, new MediaStream(), ConnectType.share);
-          const listener = screenDoc.collection('offerCandidates').doc(user.current).collection('candidates').onSnapshot((ss) => {
-            ss.docChanges().forEach(async (cc) => {
-              if (cc.type === 'added') {
-                let data = cc.doc.data();
-                if (answerPeer.pc.signalingState !== 'closed') {
-                  try {
-                    await answerPeer.pc.addIceCandidate(new RTCIceCandidate(data));
-                  }
-                  catch (error) {
-                    logger(error);
-                  }
-                }
-                else {
-                  listener();
-                  deleteSessionByKey('screen');
-                  deleteSessionByKey('share_to_answer_screen');
-                  deleteSessionByKey('share_to_offer_screen');
-                  // if (session.current['screen']) session.current['screen'].pc.close();
-                  // if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
-                  // if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
-                  // delete session.current['screen'];
-                  // delete session.current['share_to_answer_screen'];
-                  // delete session.current['share_to_offer_screen'];
-                }
-              }
-            });
-          });
-          answerPeer.listeners.push(listener);
+          // const listener = screenDoc.collection('offerCandidates').doc(user.current).collection('candidates').onSnapshot((ss) => {
+          //   ss.docChanges().forEach(async (cc) => {
+          //     if (cc.type === 'added') {
+          //       let data = cc.doc.data();
+          //       if (answerPeer.pc.signalingState !== 'closed') {
+          //         try {
+          //           await answerPeer.pc.addIceCandidate(new RTCIceCandidate(data));
+          //         }
+          //         catch (error) {
+          //           logger(error);
+          //         }
+          //       }
+          //       else {
+          //         listener();
+          //         deleteSessionByKey('screen');
+          //         deleteSessionByKey('share_to_answer_screen');
+          //         deleteSessionByKey('share_to_offer_screen');
+          //       }
+          //     }
+          //   });
+          // });
+          // answerPeer.listeners.push(listener);
         }
       });
 
@@ -446,6 +445,7 @@ export const Room = () => {
     const callDoc = db.collection('calls').doc(call);
     const userDoc = callDoc.collection('users').doc(offerID);
     const answers = userDoc.collection('answers').doc(userID);
+    const offerCandidates = userDoc.collection('offerCandidates').doc(offerID).collection('candidates');
     const answerCandidates = userDoc.collection('answerCandidates').doc(userID).collection('candidates');
 
     const sessionKey = type === ConnectType.user ? offerID : `share_to_answer_${offerID}`;
@@ -510,15 +510,29 @@ export const Room = () => {
     };
     await answers.set({ answer });
 
-    // Update session list
-    // session.current[sessionKey] = peer;
-    // setSessionState((currrentValue) => {
-    //   return {
-    //     ...currrentValue,
-    //     ...session,
-    //     [sessionKey]: peer
-    //   }  
-    // })
+    // Handle when offerers provide answer candidates
+    const listener = offerCandidates.onSnapshot(async (snapshot) => {
+      snapshot.docChanges().forEach(async (change) => {
+        if (change.type === 'added') {
+          let data = change.doc.data();
+          if (peer.pc.signalingState !== 'closed') {
+            try {
+              await peer.pc.addIceCandidate(new RTCIceCandidate(data));
+            }
+            catch (error) {
+              logger(error);
+            }
+          }
+          else {
+            const sessionKey = peer.type === ConnectType.user ? offerID : `share_to_answer_${offerID}`;
+            deleteSessionByKey(sessionKey);
+            // delete session.current[sessionKey];
+          }
+        }
+      })
+    });
+    peer.listeners.push(listener);
+
     addToSession(sessionKey, peer);
 
     if (offerID !== userID) {
@@ -556,28 +570,28 @@ export const Room = () => {
               const { offer } = snapshot.data() as Offer;
               const answerPeer = await createAnswerPeer(callID.current, user.current, id, u.name, offer, localStream.current);
 
-              const listener = doc.ref.collection('offerCandidates').doc(user.current).collection('candidates').onSnapshot((snapshot) => {
-                snapshot.docChanges().forEach(async (change) => {
-                  if (change.type === 'added') {
-                    let data = change.doc.data();
-                    if (answerPeer.pc.signalingState !== 'closed') {
-                      try {
-                        await answerPeer.pc.addIceCandidate(new RTCIceCandidate(data));
-                      }
-                      catch (error) {
-                        logger(error);
-                      }
-                    }
-                    else {
-                      listener();
-                      const sessionKey = answerPeer.type === ConnectType.user ? id : `share_to_answer_${id}`;
-                      deleteSessionByKey(sessionKey);
-                      // delete session.current[sessionKey];
-                    }
-                  }
-                });
-              });
-              answerPeer.listeners.push(listener);
+              // const listener = doc.ref.collection('offerCandidates').doc(user.current).collection('candidates').onSnapshot((snapshot) => {
+              //   snapshot.docChanges().forEach(async (change) => {
+              //     if (change.type === 'added') {
+              //       let data = change.doc.data();
+              //       if (answerPeer.pc.signalingState !== 'closed') {
+              //         try {
+              //           await answerPeer.pc.addIceCandidate(new RTCIceCandidate(data));
+              //         }
+              //         catch (error) {
+              //           logger(error);
+              //         }
+              //       }
+              //       else {
+              //         listener();
+              //         const sessionKey = answerPeer.type === ConnectType.user ? id : `share_to_answer_${id}`;
+              //         deleteSessionByKey(sessionKey);
+              //         // delete session.current[sessionKey];
+              //       }
+              //     }
+              //   });
+              // });
+              // answerPeer.listeners.push(listener);
             }
           }
         })
@@ -667,12 +681,6 @@ export const Room = () => {
                   deleteSessionByKey('screen');
                   deleteSessionByKey('share_to_answer_screen');
                   deleteSessionByKey('share_to_offer_screen');
-                  // if (session.current['screen']) session.current['screen'].pc.close();
-                  // if (session.current['share_to_answer_screen']) session.current['share_to_answer_screen'].pc.close();
-                  // if (session.current['share_to_offer_screen']) session.current['share_to_offer_screen'].pc.close();
-                  // delete session.current['screen'];
-                  // delete session.current['share_to_answer_screen'];
-                  // delete session.current['share_to_offer_screen'];
                 }
               }
             });
